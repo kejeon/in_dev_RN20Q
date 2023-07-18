@@ -40,8 +40,8 @@ class ResNetTrainer():
     self.model.to(self.device)
     self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr,
                                momentum=0.9, nesterov=True, weight_decay=5e-4)
-    self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
-    # self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[60, 120, 160], gamma=0.1)
+    # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
+    self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=list(range(20,200,20)), gamma=0.2)
 
     if self.device == 'cuda':
         self.model = torch.nn.DataParallel(self.model)
