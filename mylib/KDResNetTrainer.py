@@ -26,7 +26,8 @@ def distillation(y, labels, teacher_scores, T, alpha):
   return nn.KLDivLoss()(F.log_softmax(y/T, dim=1), F.softmax(teacher_scores/T, dim=1)) * (T*T * alpha) + F.cross_entropy(y,labels) * (1.-alpha)
 
 class ResNetTrainer():
-  def __init__(self, dataset, student_model, teacher_model, arch_tag, criterion = nn.CrossEntropyLoss(), device = 'cuda', lr = 0.1, batch_size = 128):
+  def __init__(self, dataset, student_model, teacher_model, arch_tag, 
+               T, alpha, device = 'cuda', lr = 0.1, batch_size = 128):
     self.dataset = dataset
     self.batch_size = batch_size
     self.student_model = student_model
@@ -34,6 +35,8 @@ class ResNetTrainer():
     self.lr = lr
     self.device = device
     self.best_acc = 0
+    self.T = T
+    self.alpha = alpha
 
     if dataset == 'CIFAR10':
       self.train_loader, self.test_loader = self._load_CIFAR10(self.batch_size)
@@ -51,7 +54,9 @@ class ResNetTrainer():
     self.optimizer = optim.SGD(self.student_model.parameters(), lr=self.lr,
                                momentum=0.9, nesterov=True, weight_decay=5e-4)
     # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
-    self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[40, 80, 120, 160], gamma=0.1)
+    # self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[40, 80, 120, 160], gamma=0.1)
+    self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=list(range(20,200,20)), gamma=0.2)
+
 
     if self.device == 'cuda':
         self.student_model = torch.nn.DataParallel(self.student_model)
@@ -131,7 +136,7 @@ class ResNetTrainer():
         self.optimizer.zero_grad()
         outputs = self.student_model(inputs)
         # loss = self.criterion(outputs, targets)
-        loss = distillation(outputs, targets, self.teacher_model(inputs), T=20, alpha=0.7)
+        loss = distillation(outputs, targets, self.teacher_model(inputs), T=self.T, alpha=self.alpha)
         crossEnt = self.criterion(outputs, targets)
         loss.backward()
         self.optimizer.step()
