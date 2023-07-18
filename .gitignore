@@ -2,3 +2,4 @@ data/
 wandb/
 pretrained_model/
 checkpoint/
+.DS_Store
