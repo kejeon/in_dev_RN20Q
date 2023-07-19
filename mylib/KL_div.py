@@ -35,5 +35,6 @@ def avg_kl_div_loss(model):
             else:
                 nn_traversal(layer)
         return
+    nn_traversal(model)
     
     return kl_div_total
