@@ -1,8 +1,8 @@
 import torch
+import torch.nn as nn
 
 def kl_div_loss(conv_filter):
     num_kernel = conv_filter.shape[0]
-
     mean_vec = torch.mean(conv_filter, dim=(1,2,3))
     std_vec = torch.std(conv_filter, dim=(1,2,3))
 
@@ -19,3 +19,21 @@ def kl_div_loss(conv_filter):
 
     return kl_div
 
+def avg_kl_div_loss(model):
+    kl_div_total = 0
+
+    def nn_traversal(root):
+        global kl_div_total
+        for name, layer in root.named_children():
+            if len(layer._modules) == 0:
+                if not isinstance(layer, nn.Conv2d):
+                    continue
+                if layer.in_channels != layer.out_channels:
+                    continue
+                my_tensor = layer.weight
+                kl_div_total += kl_div_loss(my_tensor)
+            else:
+                nn_traversal(layer)
+        return
+    
+    return kl_div_total
