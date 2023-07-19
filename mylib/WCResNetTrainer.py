@@ -119,7 +119,7 @@ class ResNetTrainer():
         inputs, targets = inputs.to(self.device), targets.to(self.device)
         self.optimizer.zero_grad()
         outputs = self.model(inputs)
-        wc_loss = self.eta*avg_kl_div_loss(outputs)
+        wc_loss = self.eta*avg_kl_div_loss(self.model)
         xent_loss = self.criterion(outputs, targets)
         loss = xent_loss + wc_loss
         loss.backward()
