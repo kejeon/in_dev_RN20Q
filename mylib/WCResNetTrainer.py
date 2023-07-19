@@ -119,7 +119,8 @@ class ResNetTrainer():
         inputs, targets = inputs.to(self.device), targets.to(self.device)
         self.optimizer.zero_grad()
         outputs = self.model(inputs)
-        wc_loss = self.eta*avg_kl_div_loss(self.model)
+        kl_div_loss = avg_kl_div_loss(self.model)
+        wc_loss = self.eta*kl_div_loss
         xent_loss = self.criterion(outputs, targets)
         loss = xent_loss + wc_loss
         loss.backward()
@@ -136,6 +137,7 @@ class ResNetTrainer():
         # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
         #              % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
     wandb.log({"xent_loss": xent_loss, 
+               "kl_div_loss": kl_div_loss,
                "wc_loss": wc_loss, 
                "train_loss": train_loss / total, 
                "train_acc": (correct / total),
