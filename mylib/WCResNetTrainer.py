@@ -121,11 +121,11 @@ class ResNetTrainer():
         self.optimizer.zero_grad()
         outputs = self.model(inputs)
         kl_div = avg_kl_div_loss(self.model)
-        l1_norm = torch.sum(torch.abs(p) for p in self.model.parameters())
+        l1_norm = sum(torch.abs(p).sum() for p in self.model.parameters())
         l1_loss = self.lambda_l1 * l1_norm
         wc_loss = self.lambda_kl * kl_div
         xent_loss = self.criterion(outputs, targets)
-        loss = xent_loss + wc_loss
+        loss = xent_loss + wc_loss + l1_loss
         loss.backward()
         self.optimizer.step()
 
