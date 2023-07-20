@@ -19,15 +19,16 @@ import os
 from tqdm import tqdm
 
 class ResNetTrainer():
-  def __init__(self, dataset, model, arch_tag, eta,
-               criterion = nn.CrossEntropyLoss(), device = 'cuda', lr = 0.1, batch_size = 128):
+  def __init__(self, dataset, model, arch_tag, lambda_l1, lambda_kl,
+               device = 'cuda', lr = 0.1, batch_size = 128):
     self.dataset = dataset
     self.batch_size = batch_size
     self.model = model
     self.lr = lr
     self.device = device
     self.best_acc = 0
-    self.eta = eta
+    self.lambda_l1 = lambda_l1
+    self.lambda_kl = lambda_kl
 
     if dataset == 'CIFAR10':
       self.train_loader, self.test_loader = self._load_CIFAR10(self.batch_size)
@@ -119,8 +120,10 @@ class ResNetTrainer():
         inputs, targets = inputs.to(self.device), targets.to(self.device)
         self.optimizer.zero_grad()
         outputs = self.model(inputs)
-        kl_div_loss = avg_kl_div_loss(self.model)
-        wc_loss = self.eta*kl_div_loss
+        kl_div = avg_kl_div_loss(self.model)
+        l1_norm = torch.sum(torch.abs(p) for p in self.model.parameters())
+        l1_loss = self.lambda_l1 * l1_norm
+        wc_loss = self.lambda_kl * kl_div
         xent_loss = self.criterion(outputs, targets)
         loss = xent_loss + wc_loss
         loss.backward()
@@ -137,8 +140,10 @@ class ResNetTrainer():
         # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
         #              % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
     wandb.log({"xent_loss": xent_loss, 
-               "kl_div_loss": kl_div_loss,
+               "kl_div": kl_div,
                "wc_loss": wc_loss, 
+               "l1_norm": l1_norm,
+               "l1_loss": l1_loss,
                "train_loss": train_loss / total, 
                "train_acc": (correct / total),
                "lr": self.scheduler.get_lr()[0]} )
