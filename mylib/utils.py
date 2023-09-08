@@ -14,11 +14,13 @@ def rm_algo(q_k_npa_list):
 
     pim_input = np.array([])
     coord_list = []
+    cant_merge_count = 0
 
     for k_idx, my_k in enumerate(q_k_npa_list[:num_k]):
         my_k_flat = my_k.flatten()
         if pim_input.shape[0] == 0:
             pim_input = np.concatenate((pim_input, my_k_flat[my_k_flat != 0]))
+            continue
 
         # Check for the overlapping values with pim_input vector
         occup_vec = np.full(pim_input.shape, False, dtype=bool)
@@ -56,10 +58,11 @@ def rm_algo(q_k_npa_list):
         for count, w_idx in enumerate(cant_merge_idx_list):
             coord = [w_idx, k_idx, count + pim_input.size]
             coord_list.append(coord)
-
+        
+        cant_merge_count += len(cant_merge_idx_list)
         pim_input = np.concatenate((pim_input, my_k_flat[cant_merge_idx_list]))
 
-        return len(pim_input)
+    return len(pim_input), cant_merge_count
 
 def load_CIFAR10(batch_size):
     transform_train = transforms.Compose([

@@ -67,6 +67,7 @@ class weight_quantize_fn(nn.Module):
 
             weight = weight / (2 * max_val) + 0.5                                   # w'
 
+            # weight_q_int = qfn.apply(weight, self.wbit)                             # w_Q': [0, 1]
             weight_q_int = qfn_new.apply(weight, num_levels)                             # w_Q': [0, 1]
 
             weight_q = 2 * weight_q_int - 1                                         # w_Q: [-1, +1]

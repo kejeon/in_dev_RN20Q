@@ -91,9 +91,6 @@ class BasicBlock_Q(nn.Module):
         self.conv2 = Conv2d_Q(self.w_bit, planes, planes, kernel_size=3,
                               stride=1, padding=1, bias=False)
         self.bn2 = BatchNorm2d_Q(self.a_bit, self.w_bit, planes)
-
-        # dropout: p=0.2
-        self.dropout = nn.Dropout(0.2)
         
         self.stride = stride
 
@@ -106,9 +103,6 @@ class BasicBlock_Q(nn.Module):
         shortcut = x
 
         out = self.act1(self.bn1(self.conv1(x)))
-
-        # dropout: p=0.2
-        out = self.dropout(out)
         
         out = self.conv2(out)
         out = self.bn2(out)
